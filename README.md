@@ -38,7 +38,7 @@ Projekt ma na celu automatyzację pobierania harmonogramu zajęć, umożliwiają
 
 ---
 
-Po zakończeniu działania skryptu w folderze głównym pojawi się plik **_Terminarz gigantów.csv_**, który można zaimportować do wybranego kalendarza.
+Po zakończeniu działania skryptu w folderze głównym pojawi się plik **_Terminarz giganci.csv_**, który można zaimportować do wybranego kalendarza.
 
 ## Weryfikacja błędów
 
@@ -59,6 +59,6 @@ W przypadku napotkania błędu zostanie utworzony plik _blad.txt_ w folderze gł
    ![Tworzenie nowego kalendarza](img/utworzKalendarzGoogle.png)
 5. Przejdź do opcji _Importuj/eksportuj_.
    ![Opcja Importuj/eksportuj](img/importujEksportujGoogle.png)
-6. Wybierz opcję _Wybierz plik z komputera_, wybierz plik **_Terminarz gigantów.csv_**, a następnie kliknij przycisk _Importuj_.
+6. Wybierz opcję _Wybierz plik z komputera_, wybierz plik **_Terminarz giganci.csv_**, a następnie kliknij przycisk _Importuj_.
    ![Importuj do kalendarza](img/importGoogle.png)
 7. Zweryfikuj, czy wydarzenia są zgodne z CRM i czy format wydarzeń jest prawidłowy. Jeśli wszystko jest w porządku, powtórz czynność importu od kroku numer 5 i zaimportuj terminarz do swojego głównego kalendarza.

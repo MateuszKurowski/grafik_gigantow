@@ -38,7 +38,7 @@ The project aims to automate the process of retrieving class schedules, allowing
 
 ---
 
-Once the script has finished executing, a file named **_Giants Schedule.csv_** will appear in the main folder, which can be imported into the chosen calendar.
+Once the script has finished executing, a file named **_Terminarz giganci.csv_** will appear in the main folder, which can be imported into the chosen calendar.
 
 ## Error Verification
 
@@ -59,6 +59,6 @@ If an error occurs, a file named _error.txt_ will be created in the main folder,
    ![Creating New Calendar](img/utworzKalendarzGoogle.png)
 5. Go to the _Import/Export_ option.
    ![Import/Export Option](img/importujEksportujGoogle.png)
-6. Select the _Select file from your computer_ option, choose the **_Giants Schedule.csv_** file, and then click the _Import_ button.
+6. Select the _Select file from your computer_ option, choose the **_Terminarz giganci.csv_** file, and then click the _Import_ button.
    ![Import into Calendar](img/importGoogle.png)
 7. Verify that the events match those in the CRM and that the event format is correct. If everything is in order, repeat the import process from step 5 and import the schedule into your main calendar.
