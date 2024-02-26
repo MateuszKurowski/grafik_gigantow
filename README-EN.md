@@ -42,7 +42,7 @@ Once the script has finished executing, a file named **_Terminarz giganci.csv_**
 
 ## Error Verification
 
-If an error occurs, a file named _error.txt_ will be created in the main folder, containing a detailed description of the error and the line where it occurred. Please review this message. If the problem cannot be resolved, include the _error.txt_ file when reporting the error.
+If an error occurs, a file named _blad.txt_ will be created in the main folder, containing a detailed description of the error and the line where it occurred. Please review this message. If the problem cannot be resolved, include the _blad.txt_ file when reporting the error.
 
 ## Supported Calendars
 
