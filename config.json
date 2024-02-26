@@ -1,12 +1,21 @@
 {
 	"_comments": {
-		"timeBeforeLoginInMilliseconds": "Czas przed rozpoczęciem logowania użytkownika do CRM. Opoźnienie jest wykorzystywane by można było kliknąć przycisk [Cancel] w wyskakującym oknie które przerywa działanie programu.",
+		"timeBeforeLoginInMilliseconds": "Czas w milisekundach (1000ms = 1s) przed rozpoczęciem logowania użytkownika do CRM. Opoźnienie jest wykorzystywane by można było kliknąć przycisk [Cancel] w wyskakującym oknie które przerywa działanie programu.",
 		"email": "Adres e-mail użytkownika do logowania.",
 		"password": "Hasło użytkownika do logowania.",
 		"location": "Lokalizacja, w której odbywają się zajęcia, najlepiej przekleić bezpośrednio z CRM, ponieważ czasami używają podwójnych spacji.",
 		"semester": "Semestr.",
 		"days": "Dni tygodnia, w których odbywają się zajęcia, oddzielone przecinkiem, wielkość liter nie ma znaczenia.",
 		"isPrivateEvent": "Czy wydarzenie w kalendarzu ma być prywatne.",
+		"eventNameConfig_Comment": "Wybieramy pola które mają zostać dodane do nazwy wydarzenia w kalendarzu.",
+		"eventNameConfig": {
+			"_comments": {
+				"groupId": "ID grupy.",
+				"groupAge": "Wiek grupy",
+				"lessonNumber": "Numer lekcji w semestrze np. (3/18)."
+			}
+		},
+		"eventDescriptionConfig_Comment": "Wybieramy pola które mają zostać dodane do opisu wydarzenia w kalendarzu.",
 		"eventDescriptionConfig": {
 			"_comments": {
 				"roomNumber": "Numer sali, w której odbywają się zajęcia.",
@@ -22,13 +31,6 @@
 				"endTime": "Godzina zakończenia zajęć.",
 				"location": "Lokalizacja, w której odbywają się zajęcia."
 			}
-		},
-		"eventNameConfig": {
-			"_comments": {
-				"groupId": "ID grupy.",
-				"groupAge": "Wiek grupy",
-				"lessonNumber": "Numer lekcji w semestrze np. (3/18)."
-			}
 		}
 	},
 	"timeBeforeLoginInMilliseconds": 2000,
@@ -38,6 +40,11 @@
 	"semester": "Lato 2024",
 	"days": "Wtorek,Czwartek",
 	"isPrivateEvent": false,
+	"eventNameConfig": {
+		"groupId": true,
+		"groupAge": true,
+		"lessonNumber": true
+	},
 	"eventDescriptionConfig": {
 		"roomNumber": true,
 		"lessonNumber": true,
@@ -51,10 +58,5 @@
 		"startTime": true,
 		"endTime": true,
 		"location": true
-	},
-	"eventNameConfig": {
-		"groupId": true,
-		"groupAge": true,
-		"lessonNumber": true
 	}
 }
