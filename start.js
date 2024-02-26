@@ -8,6 +8,7 @@ async function loadConfig() {
 		const data = fs.readFileSync('config.json', 'utf8')
 		config = JSON.parse(data)
 		console.log('Plik konfiguracyjny został wczytany.')
+		console.log()
 	} catch (err) {
 		throw new Error(`Błąd wczytywania pliku konfiguracyjnego: ${err}`)
 	}
@@ -413,7 +414,6 @@ async function main() {
 
 		fs.writeFileSync('blad.txt', messageToWrite)
 		console.error('Błąd:', error.message)
-		console.error('Linia:', error.stack.split('\n')[1])
 	}
 	process.exit(1)
 })()
