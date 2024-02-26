@@ -4,6 +4,8 @@
 
 Projekt ma na celu automatyzację pobierania harmonogramu zajęć, umożliwiając szybkie i proste zaimportowanie go do wybranego kalendarza. Skrypt pobiera zajęcia z określonego dnia i semestru, zapisując je do pliku CSV, który można łatwo zaimportować do wybranego kalendarza.
 
+To jest mój pierwszy projekt w Puppeteerze, nie jestem też biegły w front-endzie i mam trochę kłopotów z JavaScriptem, więc wszelkie wskazówki, próby poprawy/usprawnienia są mile widziane :)
+
 ## Instrukcja
 
 1. **Sprawdź instalację Node.js:**

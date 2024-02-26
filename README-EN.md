@@ -4,6 +4,8 @@
 
 The project aims to automate the process of retrieving class schedules, allowing for quick and easy import into a chosen calendar. The script retrieves classes for a specified day and semester, saving them to a CSV file that can be easily imported into the chosen calendar.
 
+This is my first project in Puppeteer, I'm not proficient in front-end development, and I'm also a bit clumsy with JavaScript, so any guidance, attempts to improve/enhance are welcome :)
+
 ## Instructions
 
 1. **Check Node.js Installation:**
