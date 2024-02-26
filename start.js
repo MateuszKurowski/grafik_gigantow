@@ -46,6 +46,7 @@ async function checkConfig() {
 		numberOfLessons: true,
 		numberOfStudents: true,
 		firstLessonDate: true,
+		lastLessonDate: true,
 		groupId: true,
 		courseName: true,
 		groupAge: true,
@@ -192,7 +193,7 @@ function createObjectFromHeaderText(headerText) {
 		endTime,
 		dayOfWeek,
 		courseName,
-		ageCategory,
+		groupAge,
 		location,
 		firstLessonDate,
 		numberOfLessons,
@@ -200,13 +201,13 @@ function createObjectFromHeaderText(headerText) {
 		roomNumber,
 	] = match
 
-	const obj = {
+	const group = {
 		groupID,
 		startTime,
 		endTime,
 		dayOfWeek,
 		courseName,
-		groupAge: ageCategory,
+		groupAge: groupAge,
 		location: location,
 		firstLessonDate,
 		numberOfLessons,
@@ -214,9 +215,9 @@ function createObjectFromHeaderText(headerText) {
 		roomNumber,
 	}
 
-	if (obj.category == '13-15') obj.category = '13-18'
+	if (group.groupAge == '13-15') group.groupAge = '13-18'
 
-	return obj
+	return group
 }
 
 async function getAllDates(page, rowSelector) {
@@ -238,7 +239,7 @@ async function getAllDates(page, rowSelector) {
 	return datesWithTime
 }
 
-async function CreateEventDescription(group, lessonNumber) {
+async function CreateEventDescription(group, lessonNumber, lastGroupLessonDate) {
 	let description = ''
 
 	if (config.eventDescriptionConfig.roomNumber) {
@@ -254,8 +255,11 @@ async function CreateEventDescription(group, lessonNumber) {
 		description += `Ilość uczniów: ${group.numberOfStudents}<br/>`
 	}
 	if (config.eventDescriptionConfig.firstLessonDate) {
-		const newDate = formatDate(group.firstLessonDate)
+		const newDate = await formatDate(group.firstLessonDate)
 		description += `Pierwsze zajęcia: ${newDate}<br/>`
+	}
+	if (config.eventDescriptionConfig.lastLessonDate) {
+		description += `Ostatnie zajęcia: ${lastGroupLessonDate}<br/>`
 	}
 	description += '<br/>'
 	if (config.eventDescriptionConfig.groupId) {
@@ -265,7 +269,7 @@ async function CreateEventDescription(group, lessonNumber) {
 		description += `Nazwa: ${group.courseName}<br/>`
 	}
 	if (config.eventDescriptionConfig.groupAge) {
-		description += `Wiek: ${group.category}<br/>`
+		description += `Wiek: ${group.groupAge}<br/>`
 	}
 	if (config.eventDescriptionConfig.dayOfWeek) {
 		description += `Dzień: ${group.dayOfWeek}<br/>`
@@ -303,11 +307,12 @@ async function CreateCsv(group) {
 	let meetingNumber = 1
 	const privateEvent = config.isPrivateEvent ? 'TRUE' : 'FALSE'
 	let csvResult = ''
+	const lastGroupLessonDate = await getLastLessonDate(group.dates)
 
 	for (const lessonDate of group.dates) {
-		const lessonNumber = `(${meetingNumber}/${group.meetings})`
+		const lessonNumber = `(${meetingNumber}/${group.numberOfLessons})`
 		const subject = await CreateEventName(group, lessonNumber)
-		const description = await CreateEventDescription(group, meetingNumber)
+		const description = await CreateEventDescription(group, meetingNumber, lastGroupLessonDate)
 
 		const [date, timeRange] = lessonDate.split('  ')
 		const [startTime, endTime] = timeRange.split('-')
@@ -323,7 +328,7 @@ async function CreateCsv(group) {
 
 async function formatDate(date) {
 	try {
-		const dateObject = new Date(dateString)
+		const dateObject = new Date(date)
 
 		const day = dateObject.getDate()
 		const month = dateObject.getMonth() + 1
@@ -331,8 +336,15 @@ async function formatDate(date) {
 
 		return `${day}/${month}/${year}`
 	} catch (error) {
+		console.error(error)
 		return date
 	}
+}
+
+async function getLastLessonDate(dates) {
+	const parsedDates = dates.map(dateString => new Date(dateString.split(' ')[0]))
+	const youngestDate = new Date(Math.max(...parsedDates))
+	return await formatDate(youngestDate)
 }
 
 async function main() {
@@ -379,6 +391,7 @@ async function main() {
 	}
 
 	console.log('Grupy zostały pobrane.')
+	console.log()
 	await browser.close()
 	console.log('Przetwarzanie grup..')
 
@@ -390,6 +403,7 @@ async function main() {
 		csvBody += groupCsvResult
 	}
 	console.log('Przetwarzanie zakończone.')
+	console.log()
 	console.log('Zapisywanie harmonogram do pliku CSV..')
 	const csvFilePath = 'Terminarz giganci.csv'
 	const csvData = csvHeader + csvBody
