@@ -20,8 +20,8 @@ W fazie budowy.
 8. [x] Zapisanie obiektu grupy do pliku .CSV
 9. [x] Pobieranie wszystkich grup z wybranego dnia do listy obiektów grup
 10. [x] Zapisanie listy obiektów grup do pliku .CSV
-11. [ ] Utworzenie i obsługa pliku config
-12. [ ] Obsługa pobierania wielu dni
+11. [x] Utworzenie i obsługa pliku config
+12. [x] Obsługa pobierania wielu dni
 13. [ ] Konfiguracja w configu, które informacje będą zapisywane do eventu kalendarza
 14. [ ] Utworzenie readme z opisem projektu
 15. [ ] Dodanie do readme instrukcji obsługi

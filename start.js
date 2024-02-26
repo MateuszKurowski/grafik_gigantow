@@ -1,3 +1,88 @@
+const fs = require('fs')
+const puppeteer = require('puppeteer')
+let config
+const groups = []
+
+async function loadConfig() {
+	try {
+		const data = fs.readFileSync('config.json', 'utf8')
+		config = JSON.parse(data)
+		console.log('Plik konfiguracyjny został wczytany.')
+	} catch (err) {
+		throw new Error(`Błąd wczytywania pliku konfiguracyjnego: ${err}`)
+	}
+}
+
+async function checkConfig() {
+	if (config['email'] == 'example@example.com' || config['password'] == 'password123') {
+		throw new Error(
+			"Aby pobrać harmonogram zajęć najpierw otwórz plik config.json i uzupełnij pola poniżej pola '_comment'."
+		)
+	}
+
+	const requiredFields = ['email', 'password', 'location', 'semester', 'days']
+
+	requiredFields.forEach(field => {
+		if (!config.hasOwnProperty(field) || !config[field]) {
+			throw new Error(`Pole "${field}" jest puste lub nie istnieje.`)
+		}
+	})
+
+	if (!config.hasOwnProperty('isPrivateEvent') || typeof config['isPrivateEvent'] !== 'boolean') {
+		config.isPrivateEvent = false
+	}
+
+	if (
+		!config.hasOwnProperty('timeBeforeLoginInMilliseconds') ||
+		typeof config['timeBeforeLoginInMilliseconds'] !== 'number'
+	) {
+		config.timeBeforeLoginInMilliseconds = 2000
+	}
+
+	const defaultEventDescriptionConfig = {
+		roomNumber: true,
+		lessonNumber: true,
+		numberOfLessons: true,
+		numberOfStudents: true,
+		firstLessonDate: true,
+		groupId: true,
+		courseName: true,
+		groupAge: true,
+		dayOfWeek: true,
+		startTime: true,
+		endTime: true,
+		location: true,
+	}
+
+	if (!config.hasOwnProperty('eventDescriptionConfig')) {
+		config.eventDescriptionConfig = defaultEventDescriptionConfig
+	} else {
+		const descriptionConfig = config.eventDescriptionConfig
+		for (const [key, value] of Object.entries(defaultEventDescriptionConfig)) {
+			if (!descriptionConfig.hasOwnProperty(key) || typeof descriptionConfig[key] !== 'boolean') {
+				descriptionConfig[key] = true
+			}
+		}
+	}
+
+	const defaultEventNameConfig = {
+		groupId: true,
+		groupAge: true,
+		lessonNumber: true,
+	}
+
+	if (!config.hasOwnProperty('eventNameConfig')) {
+		config.eventNameConfig = defaultEventNameConfig
+	} else {
+		const nameConfig = config.eventNameConfig
+		for (const [key, value] of Object.entries(defaultEventNameConfig)) {
+			if (!nameConfig.hasOwnProperty(key) || typeof nameConfig[key] !== 'boolean') {
+				nameConfig[key] = true
+			}
+		}
+	}
+}
+
 function delay(time) {
 	return new Promise(function (resolve) {
 		setTimeout(resolve, time)
@@ -23,38 +108,68 @@ async function getParentOptionId(page, optionText, selectFieldId, optionFieldId)
 	return parentId
 }
 
-async function selectTermAndGroup(page) {
-	let optionId = await getParentOptionId(page, term, '#mat-select-6', 'mat-option')
-	await page.click(`#${optionId}`)
+async function selectTermAndLocation(page) {
+	try {
+		let optionId = await getParentOptionId(page, config.semester, '#mat-select-6', 'mat-option')
+		await page.click(`#${optionId}`)
+	} catch (error) {
+		throw new Error(`Nie znaleziono wybranego semestru: ${config.semester}`)
+	}
 
-	optionId = await getParentOptionId(page, location, 'input[id="mat-input-0"]', 'mat-option')
-	await page.click(`#${optionId}`)
+	try {
+		optionId = await getParentOptionId(page, config.location, 'input[id="mat-input-0"]', 'mat-option')
+		await page.click(`#${optionId}`)
+	} catch (error) {
+		throw new Error(`Nie znaleziono wybranej lokalizacji: ${config.location}`)
+	}
+}
 
-	optionId = await getParentOptionId(page, day, '#mat-select-0', 'mat-option')
-	await page.click(`#${optionId}`)
+async function selectDayAndSearch(page, day) {
+	try {
+		day = await translateDay(day)
+		day = day.charAt(0).toUpperCase() + day.slice(1).toLowerCase()
+
+		optionId = await getParentOptionId(page, day, '#mat-select-0', 'mat-option')
+		await page.click(`#${optionId}`)
+	} catch (error) {
+		throw new Error(`Nie znaleziono wybranego dnia: ${day}`)
+	}
 
 	await page.click('.orangeButton')
 }
 
-async function login(page, browser) {
+async function translateDay(day) {
+	const englishToPolish = {
+		monday: 'poniedziałek',
+		tuesday: 'wtorek',
+		wednesday: 'środa',
+		thursday: 'czwartek',
+		friday: 'piątek',
+		saturday: 'sobota',
+		sunday: 'niedziela',
+	}
+
+	if (englishToPolish.hasOwnProperty(day.toLowerCase())) {
+		return englishToPolish[day.toLowerCase()]
+	} else {
+		return day
+	}
+}
+
+async function login(page) {
 	await page.waitForSelector('input[formcontrolname="username"]')
-	await page.type('input[formcontrolname="username"]', email)
-	await page.type('input[formcontrolname="password"]', pass)
+	await page.type('input[formcontrolname="username"]', config.email)
+	await page.type('input[formcontrolname="password"]', config.password)
 	await delay(500)
 	const enteredValue = await page.$eval('input[formcontrolname="username"]', input => input.value)
-	if (enteredValue !== email) {
-		console.error(
+	if (enteredValue !== config.email) {
+		throw new Error(
 			'Wykonywanie skryptu zablokowane przez wyskakujące okno. Zamknij je klikając przycisk [Cancel] lub spróbuj ponownie. Okno wyskakuje losowo czasami nawet pare razy pod rząd.'
 		)
-		if (browser) {
-			await browser.close()
-		}
-		return false
 	}
 
 	await Promise.all([page.click('button[data-testid="login-button"]'), page.waitForNavigation()])
 	await page.goto('https://giganciprogramowaniaformularz.edu.pl/app/ListaObecnosci')
-	return true
 }
 
 function createObjectFromHeaderText(headerText) {
@@ -69,20 +184,33 @@ function createObjectFromHeaderText(headerText) {
 		return null
 	}
 
-	const [, groupID, startTime, endTime, day, name, ageCategory, address, startDate, meetings, students, room] = match
+	const [
+		,
+		groupID,
+		startTime,
+		endTime,
+		dayOfWeek,
+		courseName,
+		ageCategory,
+		location,
+		firstLessonDate,
+		numberOfLessons,
+		numberOfStudents,
+		roomNumber,
+	] = match
 
 	const obj = {
 		groupID,
 		startTime,
 		endTime,
-		day,
-		name,
-		category: ageCategory,
-		address: address,
-		startDate,
-		meetings,
-		students,
-		room,
+		dayOfWeek,
+		courseName,
+		groupAge: ageCategory,
+		location: location,
+		firstLessonDate,
+		numberOfLessons,
+		numberOfStudents,
+		roomNumber,
 	}
 
 	if (obj.category == '13-15') obj.category = '13-18'
@@ -109,18 +237,82 @@ async function getAllDates(page, rowSelector) {
 	return datesWithTime
 }
 
+async function CreateEventDescription(group, lessonNumber) {
+	let description = ''
+
+	if (config.eventDescriptionConfig.roomNumber) {
+		description += `Numer sali: ${group.roomNumber}<br/>`
+	}
+	if (config.eventDescriptionConfig.lessonNumber) {
+		description += `Numer lekcji: ${lessonNumber}<br/>`
+	}
+	if (config.eventDescriptionConfig.numberOfLessons) {
+		description += `Liczba spotkań: ${group.numberOfLessons}<br/>`
+	}
+	if (config.eventDescriptionConfig.numberOfStudents) {
+		description += `Ilość uczniów: ${group.numberOfStudents}<br/>`
+	}
+	if (config.eventDescriptionConfig.firstLessonDate) {
+		const newDate = formatDate(group.firstLessonDate)
+		description += `Pierwsze zajęcia: ${newDate}<br/>`
+	}
+	description += '<br/>'
+	if (config.eventDescriptionConfig.groupId) {
+		description += `ID: ${group.groupID}<br/>`
+	}
+	if (config.eventDescriptionConfig.courseName) {
+		description += `Nazwa: ${group.courseName}<br/>`
+	}
+	if (config.eventDescriptionConfig.groupAge) {
+		description += `Wiek: ${group.category}<br/>`
+	}
+	if (config.eventDescriptionConfig.dayOfWeek) {
+		description += `Dzień: ${group.dayOfWeek}<br/>`
+	}
+	if (config.eventDescriptionConfig.startTime) {
+		description += `Godzina rozpoczęcia: ${group.startTime}<br/>`
+	}
+	if (config.eventDescriptionConfig.endTime) {
+		description += `Godzina zakończenia: ${group.endTime}<br/>`
+	}
+	if (config.eventDescriptionConfig.location) {
+		description += `Adres: ${group.location}<br/>`
+	}
+
+	return description
+}
+
+async function CreateEventName(group, lessonNumber) {
+	let name = ''
+	if (config.eventNameConfig.groupId) {
+		name += `[${group.groupID}] `
+	}
+	name += group.courseName
+	if (config.eventNameConfig.groupAge) {
+		name += ` - ${group.groupAge} lat`
+	}
+	if (config.eventNameConfig.lessonNumber) {
+		name += ` ${lessonNumber}`
+	}
+
+	return name
+}
+
 async function CreateCsv(group) {
 	let meetingNumber = 1
-	const description = `Numer sali: ${group.room}<br/>Liczba spotkań: ${group.meetings}<br/>Ilość uczniów: ${group.students}<br/>Pierwsze zajęcia: ${group.startDate}<br/><br/>ID: ${group.groupID}<br/>Nazwa: ${group.name}<br/>Wiek: ${group.category}<br/>Dzień: ${group.day}<br/>Godzina rozpoczęcia: ${group.startTime}<br/>Godzina zakończenia: ${group.endTime}<br/>Adres: ${group.address}`
-	const privateEvent = isPrivateEvent ? 'TRUE' : 'FALSE'
+	const privateEvent = config.isPrivateEvent ? 'TRUE' : 'FALSE'
 	let csvResult = ''
 
 	for (const lessonDate of group.dates) {
-		const subject = `[${group.groupID}] ${group.name} - ${group.category} lat (${meetingNumber}/${group.meetings})`
+		const lessonNumber = `(${meetingNumber}/${group.meetings})`
+		const subject = await CreateEventName(group, lessonNumber)
+		const description = await CreateEventDescription(group, meetingNumber)
+
 		const [date, timeRange] = lessonDate.split('  ')
 		const [startTime, endTime] = timeRange.split('-')
 
-		const result = `${subject},${date},${startTime},${date},${endTime},FALSE,${description},${location},${privateEvent}\n`
+		const result = `"${subject}","${date}","${startTime}","${date}","${endTime}",FALSE,"${description}","${config.location}","${privateEvent}"\n`
+
 		csvResult += result
 
 		meetingNumber += 1
@@ -128,49 +320,62 @@ async function CreateCsv(group) {
 	return csvResult
 }
 
-const fs = require('fs')
-const puppeteer = require('puppeteer')
-const email = 'x'
-const pass = 'x'
-const location = 'Myślenice  Gałczyńskiego 16'
-const term = 'Lato 2024'
-const day = 'Sobota'
-const isPrivateEvent = false
-const groups = []
+async function formatDate(date) {
+	try {
+		const dateObject = new Date(dateString)
 
-;(async () => {
+		const day = dateObject.getDate()
+		const month = dateObject.getMonth() + 1
+		const year = dateObject.getFullYear()
+
+		return `${day}/${month}/${year}`
+	} catch (error) {
+		return date
+	}
+}
+
+async function main() {
+	await loadConfig()
+	await checkConfig()
+
 	const browser = await puppeteer.launch({ headless: false })
 	const page = await browser.newPage()
 
 	await page.goto('https://giganciprogramowaniaformularz.edu.pl/app/Login')
-	await delay(1500)
+	await delay(config.timeBeforeLoginInMilliseconds)
 
-	let result = await login(page, browser)
-	if (!result) return
+	await login(page, browser)
 	await delay(1000)
 
-	await selectTermAndGroup(page)
+	await selectTermAndLocation(page)
 
-	await page.waitForSelector('mat-expansion-panel')
-	const panels = await page.$$('mat-expansion-panel')
+	const days = config.days
+		.toLowerCase()
+		.split(',')
+		.map(day => day.trim())
 
-	console.log('Pobieram grupy z CRM..')
-	for (const panel of panels) {
-		const header = await panel.$('mat-expansion-panel-header')
-		const headerText = await page.evaluate(header => header.textContent.trim(), header)
+	for (const day of days) {
+		await selectDayAndSearch(page, day)
 
-		const group = createObjectFromHeaderText(headerText)
+		await page.waitForSelector('mat-expansion-panel')
+		const panels = await page.$$('mat-expansion-panel')
 
-		header.click()
-		await delay(2000)
+		console.log(`Pobieram grupy z CRM dla dnia: ${day}..`)
+		for (const panel of panels) {
+			const header = await panel.$('mat-expansion-panel-header')
+			const headerText = await page.evaluate(header => header.textContent.trim(), header)
 
-		const allDates = await getAllDates(page, 'tr.mat-header-row')
-		group.dates = allDates
+			const group = createObjectFromHeaderText(headerText)
 
-		groups.push(group)
+			header.click()
+			await delay(2000)
+
+			const allDates = await getAllDates(page, 'tr.mat-header-row')
+			group.dates = allDates
+
+			groups.push(group)
+		}
 	}
-
-	console.log(groups)
 
 	console.log('Grupy zostały pobrane.')
 	await browser.close()
@@ -183,15 +388,32 @@ const groups = []
 		const groupCsvResult = await CreateCsv(group)
 		csvBody += groupCsvResult
 	}
-
 	console.log('Przetwarzanie zakończone.')
 	console.log('Zapisywanie harmonogram do pliku CSV..')
 	const csvFilePath = 'Terminarz giganci.csv'
 	const csvData = csvHeader + csvBody
-	fs.writeFile(csvFilePath, csvData, err => {
+	fs.writeFileSync(csvFilePath, csvData, err => {
 		if (err) {
-			console.error('Wystąpił błąd podczas zapisu harmonogramu do pliku: ', error)
+			throw new Error(`Wystąpił błąd podczas zapisu harmonogramu do pliku: ${err}`)
 		}
 	})
 	console.log('Zapisywanie zakończone.')
+}
+
+;(async () => {
+	try {
+		await main()
+	} catch (error) {
+		const errorMessage = error.message
+		const stackTrace = error.stack
+
+		const separator = '-'.repeat(20)
+
+		const messageToWrite = `${errorMessage}\n\n${separator}\n\n${stackTrace}`
+
+		fs.writeFileSync('blad.txt', messageToWrite)
+		console.error('Błąd:', error.message)
+		console.error('Linia:', error.stack.split('\n')[1])
+	}
+	process.exit(1)
 })()
