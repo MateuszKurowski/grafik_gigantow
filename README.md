@@ -1,4 +1,4 @@
-# The Schedule of Giants
+# Grafik gigantów
 
 ## Opis
 
