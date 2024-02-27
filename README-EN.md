@@ -42,6 +42,8 @@ If an error occurs, a file named _blad.txt_ will be created in the main folder, 
 
 - [x] Google Calendar
 
+ I haven't checked others, I encourage verification and leaving feedback.
+
 ## Example Import to Google Calendar
 
 1. Go to [Google Calendar](https://calendar.google.com/).
