@@ -42,6 +42,8 @@ W przypadku napotkania błędu zostanie utworzony plik _blad.txt_ w folderze gł
 
 - [x] Kalendarz Google
 
+Nie spradzałem innych, zachęcam do weryfikacji i zostawienia informacji.
+
 ## Przykład importu do kalendarza Google
 
 1. Przejdź do [kalendarza Google](https://calendar.google.com/).
