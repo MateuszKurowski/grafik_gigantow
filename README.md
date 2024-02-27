@@ -1,8 +1,8 @@
-# Grafik Gigantów
+# The Schedule of Giants
 
 ## Opis
 
-Projekt ma na celu automatyzację pobierania harmonogramu zajęć, umożliwiając szybkie i proste zaimportowanie go do wybranego kalendarza. Skrypt pobiera zajęcia z określonego dnia i semestru, zapisując je do pliku CSV, który można łatwo zaimportować do wybranego kalendarza.
+Projekt ma na celu automatyzację pobierania harmonogramu zajęć, umożliwiając szybkie i proste zaimportowanie go do wybranego kalendarza. Skrypt pobiera zajęcia z określonego dnia i semestru, zapisując je do pliku ICS (iCal)/CSV, który można łatwo zaimportować do wybranego kalendarza.
 
 To jest mój pierwszy projekt w Puppeteerze, nie jestem też biegły w front-endzie i mam trochę kłopotów z JavaScriptem, więc wszelkie wskazówki, próby poprawy/usprawnienia są mile widziane :)
 
@@ -30,17 +30,9 @@ To jest mój pierwszy projekt w Puppeteerze, nie jestem też biegły w front-end
 
 6. **Automatyczne działanie skryptu:**
 
-   Po uruchomieniu programu i załadowaniu pliku konfiguracyjnego otworzy się przeglądarka, która automatycznie przeprowadzi proces interakcji z CRM. Nie należy kliknąć nic podczas działania skryptu.
+   Po uruchomieniu programu i załadowaniu pliku konfiguracyjnego w tle otworzy się przeglądarka, która automatycznie przeprowadzi proces interakcji z CRM. Przeglądarka nie będzie widoczna na użytkownika.
 
----
-
-**Uwaga:** Występuje jeden wyjątek, czasami losowo pojawia się komunikat, jak na zrzucie poniżej. Przed logowaniem skrypt czeka domyślnie 2 sekundy zanim rozpocznie działanie. W tym czasie możemy ręcznie wyłączyć okno klikając przycisk [Cancel]. Jeśli tego nie zrobimy, skrypt zakończy się z błędem. Okno czasami pojawia się kilka razy pod rząd. Zalecamy ręczne kliknięcie przycisku [Cancel] lub uruchomienie skryptu kilka razy.
-
-![Wyskakujące okno logowania w CRM](img/wyskakujaceOkno.png)
-
----
-
-Po zakończeniu działania skryptu w folderze głównym pojawi się plik **_Terminarz giganci.csv_**, który można zaimportować do wybranego kalendarza.
+Po zakończeniu działania skryptu w folderze głównym pojawi się plik **_Terminarz giganci.csv_** lub **_Terminarz giganci.isc_** w zależności od wybranej opcji, który można zaimportować do wybranego kalendarza.
 
 ## Weryfikacja błędów
 
@@ -61,6 +53,6 @@ W przypadku napotkania błędu zostanie utworzony plik _blad.txt_ w folderze gł
    ![Tworzenie nowego kalendarza](img/utworzKalendarzGoogle.png)
 5. Przejdź do opcji _Importuj/eksportuj_.
    ![Opcja Importuj/eksportuj](img/importujEksportujGoogle.png)
-6. Wybierz opcję _Wybierz plik z komputera_, wybierz plik **_Terminarz giganci.csv_**, a następnie kliknij przycisk _Importuj_.
+6. Wybierz opcję _Wybierz plik z komputera_, wybierz plik **_Terminarz giganci.isc_**, a następnie kliknij przycisk _Importuj_.
    ![Importuj do kalendarza](img/importGoogle.png)
 7. Zweryfikuj, czy wydarzenia są zgodne z CRM i czy format wydarzeń jest prawidłowy. Jeśli wszystko jest w porządku, powtórz czynność importu od kroku numer 5 i zaimportuj terminarz do swojego głównego kalendarza.

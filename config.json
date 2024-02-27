@@ -1,12 +1,12 @@
 {
 	"_comments": {
-		"timeBeforeLoginInMilliseconds": "Czas w milisekundach (1000ms = 1s) przed rozpoczęciem logowania użytkownika do CRM. Opoźnienie jest wykorzystywane by można było kliknąć przycisk [Cancel] w wyskakującym oknie które przerywa działanie programu.",
 		"email": "Adres e-mail użytkownika do logowania.",
 		"password": "Hasło użytkownika do logowania.",
 		"location": "Lokalizacja, w której odbywają się zajęcia, najlepiej przekleić bezpośrednio z CRM, ponieważ czasami używają podwójnych spacji.",
 		"semester": "Semestr.",
 		"days": "Dni tygodnia, w których odbywają się zajęcia, oddzielone przecinkiem, wielkość liter nie ma znaczenia.",
 		"isPrivateEvent": "Czy wydarzenie w kalendarzu ma być prywatne.",
+		"calendarFileFormat": "Format w jakim będzie plik z kalendarzem. Do wyboru: 'iCal' lub 'csv'. Zalecam iCal ponieważ w csv wysypuje się formatowanie nowych linii opisu na aplikacji mobilnej na iOS",
 		"eventNameConfig_Comment": "Wybieramy pola które mają zostać dodane do nazwy wydarzenia w kalendarzu.",
 		"eventNameConfig": {
 			"_comments": {
@@ -34,19 +34,20 @@
 			}
 		}
 	},
-	"timeBeforeLoginInMilliseconds": 2000,
 	"email": "example@example.com",
 	"password": "password123",
 	"location": "Myślenice  Gałczyńskiego 16",
 	"semester": "Lato 2024",
 	"days": "Wtorek,Czwartek",
 	"isPrivateEvent": false,
+	"calendarFileFormat": "iCal",
 	"eventNameConfig": {
 		"groupId": true,
 		"groupAge": true,
 		"lessonNumber": true
 	},
 	"eventDescriptionConfig": {
+		"location": true,
 		"roomNumber": true,
 		"lessonNumber": true,
 		"numberOfLessons": true,
@@ -58,7 +59,6 @@
 		"groupAge": true,
 		"dayOfWeek": true,
 		"startTime": true,
-		"endTime": true,
-		"location": true
+		"endTime": true
 	}
 }

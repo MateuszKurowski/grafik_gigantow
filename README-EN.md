@@ -30,17 +30,9 @@ This is my first project in Puppeteer, I'm not proficient in front-end developme
 
 6. **Automated Script Execution:**
 
-   Upon starting the program and loading the configuration file, a browser will open, which will automatically interact with the CRM. Do not click anything during script execution.
+   After launching the program and loading the configuration file, a browser will open in the background, automatically conducting the interaction process with the CRM. The browser will not be visible to the user.
 
----
-
-**Note:** There is one exception; sometimes, a login prompt randomly appears, as shown in the screenshot below. By default, the script waits for 2 seconds before starting its execution. During this time, you can manually close the window by clicking the [Cancel] button. If not closed, the script will terminate with an error. The window may appear multiple times in a row. We recommend manually clicking the [Cancel] button or running the script multiple times.
-
-![Login Prompt in CRM](img/wyskakujaceOkno.png)
-
----
-
-Once the script has finished executing, a file named **_Terminarz giganci.csv_** will appear in the main folder, which can be imported into the chosen calendar.
+After the script finishes running, a file named **_Terminarz giganci.csv_** or **_Terminarz giganci.isc_** will appear in the main folder, depending on the chosen option, which can be imported into the selected calendar.
 
 ## Error Verification
 

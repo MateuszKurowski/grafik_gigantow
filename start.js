@@ -1,5 +1,6 @@
 const fs = require('fs')
 const puppeteer = require('puppeteer')
+const ical = require('ical-generator').default
 let config
 const groups = []
 
@@ -15,6 +16,7 @@ async function loadConfig() {
 }
 
 async function checkConfig() {
+	let wasChanges = false
 	if (config['email'] == 'example@example.com' || config['password'] == 'password123') {
 		throw new Error(
 			"Aby pobrać harmonogram zajęć najpierw otwórz plik config.json i uzupełnij pola poniżej pola '_comment'."
@@ -31,13 +33,12 @@ async function checkConfig() {
 
 	if (!config.hasOwnProperty('isPrivateEvent') || typeof config['isPrivateEvent'] !== 'boolean') {
 		config.isPrivateEvent = false
+		wasChanges = true
 	}
 
-	if (
-		!config.hasOwnProperty('timeBeforeLoginInMilliseconds') ||
-		typeof config['timeBeforeLoginInMilliseconds'] !== 'number'
-	) {
-		config.timeBeforeLoginInMilliseconds = 2000
+	if (!config.hasOwnProperty('calendarFileFormat') || !config['calendarFileFormat']) {
+		config.calendarFileFormat = 'iCal'
+		wasChanges = true
 	}
 
 	const defaultEventDescriptionConfig = {
@@ -63,6 +64,7 @@ async function checkConfig() {
 		for (const [key, value] of Object.entries(defaultEventDescriptionConfig)) {
 			if (!descriptionConfig.hasOwnProperty(key) || typeof descriptionConfig[key] !== 'boolean') {
 				descriptionConfig[key] = true
+				wasChanges = true
 			}
 		}
 	}
@@ -80,8 +82,13 @@ async function checkConfig() {
 		for (const [key, value] of Object.entries(defaultEventNameConfig)) {
 			if (!nameConfig.hasOwnProperty(key) || typeof nameConfig[key] !== 'boolean') {
 				nameConfig[key] = true
+				wasChanges = true
 			}
 		}
+	}
+
+	if (wasChanges) {
+		fs.writeFileSync('config.json', JSON.stringify(config, null, 4), 'utf8')
 	}
 }
 
@@ -159,15 +166,25 @@ async function translateDay(day) {
 }
 
 async function login(page) {
-	await page.waitForSelector('input[formcontrolname="username"]')
-	await page.type('input[formcontrolname="username"]', config.email)
-	await page.type('input[formcontrolname="password"]', config.password)
-	await delay(500)
-	const enteredValue = await page.$eval('input[formcontrolname="username"]', input => input.value)
-	if (enteredValue !== config.email) {
-		throw new Error(
-			'Wykonywanie skryptu zablokowane przez wyskakujące okno. Zamknij je klikając przycisk [Cancel] lub spróbuj ponownie. Okno wyskakuje losowo czasami nawet pare razy pod rząd.'
-		)
+	let loginInputWasBrake = true
+	let i = 0
+	while (loginInputWasBrake) {
+		await page.waitForSelector('input[formcontrolname="username"]')
+		await page.type('input[formcontrolname="username"]', config.email)
+		await page.type('input[formcontrolname="password"]', config.password)
+		await delay(500)
+		const enteredValue = await page.$eval('input[formcontrolname="password"]', input => input.value)
+		if (enteredValue == config.password) {
+			loginInputWasBrake = false
+			break
+		}
+		await delay(500)
+		await page.goto('https://giganciprogramowaniaformularz.edu.pl/app/Login')
+		await delay(500)
+		i += 1
+		if (i == 10) {
+			throw new Error('CRM nie odpowiada, spróbuj ponownie za pare sekund.')
+		}
 	}
 
 	await Promise.all([page.click('button[data-testid="login-button"]'), page.waitForNavigation()])
@@ -239,49 +256,49 @@ async function getAllDates(page, rowSelector) {
 	return datesWithTime
 }
 
-async function CreateEventDescription(group, lessonNumber, lastGroupLessonDate) {
+async function CreateEventDescription(group, lessonNumber, lastGroupLessonDate, newLineSign) {
 	let description = ''
 
 	if (config.eventDescriptionConfig.roomNumber) {
-		description += `Numer sali: ${group.roomNumber}<br/>`
+		description += `Numer sali: ${group.roomNumber}${newLineSign}`
 	}
 	if (config.eventDescriptionConfig.lessonNumber) {
-		description += `Numer lekcji: ${lessonNumber}<br/>`
+		description += `Numer lekcji: ${lessonNumber}${newLineSign}`
 	}
 	if (config.eventDescriptionConfig.numberOfLessons) {
-		description += `Liczba spotkań: ${group.numberOfLessons}<br/>`
+		description += `Liczba spotkań: ${group.numberOfLessons}${newLineSign}`
 	}
 	if (config.eventDescriptionConfig.numberOfStudents) {
-		description += `Ilość uczniów: ${group.numberOfStudents}<br/>`
+		description += `Ilość uczniów: ${group.numberOfStudents}${newLineSign}`
 	}
 	if (config.eventDescriptionConfig.firstLessonDate) {
 		const newDate = await formatDate(group.firstLessonDate)
-		description += `Pierwsze zajęcia: ${newDate}<br/>`
+		description += `Pierwsze zajęcia: ${newDate}${newLineSign}`
 	}
 	if (config.eventDescriptionConfig.lastLessonDate) {
-		description += `Ostatnie zajęcia: ${lastGroupLessonDate}<br/>`
+		description += `Ostatnie zajęcia: ${lastGroupLessonDate}${newLineSign}`
 	}
-	description += '<br/>'
+	description += newLineSign
 	if (config.eventDescriptionConfig.groupId) {
-		description += `ID: ${group.groupID}<br/>`
+		description += `ID: ${group.groupID}${newLineSign}`
 	}
 	if (config.eventDescriptionConfig.courseName) {
-		description += `Nazwa: ${group.courseName}<br/>`
+		description += `Nazwa: ${group.courseName}${newLineSign}`
 	}
 	if (config.eventDescriptionConfig.groupAge) {
-		description += `Wiek: ${group.groupAge}<br/>`
+		description += `Wiek: ${group.groupAge}${newLineSign}`
 	}
 	if (config.eventDescriptionConfig.dayOfWeek) {
-		description += `Dzień: ${group.dayOfWeek}<br/>`
+		description += `Dzień: ${group.dayOfWeek}${newLineSign}`
 	}
 	if (config.eventDescriptionConfig.startTime) {
-		description += `Godzina rozpoczęcia: ${group.startTime}<br/>`
+		description += `Godzina rozpoczęcia: ${group.startTime}${newLineSign}`
 	}
 	if (config.eventDescriptionConfig.endTime) {
-		description += `Godzina zakończenia: ${group.endTime}<br/>`
+		description += `Godzina zakończenia: ${group.endTime}${newLineSign}`
 	}
 	if (config.eventDescriptionConfig.location) {
-		description += `Adres: ${group.location}<br/>`
+		description += `Adres: ${group.location}${newLineSign}`
 	}
 
 	return description
@@ -312,7 +329,7 @@ async function CreateCsv(group) {
 	for (const lessonDate of group.dates) {
 		const lessonNumber = `(${meetingNumber}/${group.numberOfLessons})`
 		const subject = await CreateEventName(group, lessonNumber)
-		const description = await CreateEventDescription(group, meetingNumber, lastGroupLessonDate)
+		const description = await CreateEventDescription(group, meetingNumber, lastGroupLessonDate, '<br/>')
 
 		const [date, timeRange] = lessonDate.split('  ')
 		const [startTime, endTime] = timeRange.split('-')
@@ -324,6 +341,39 @@ async function CreateCsv(group) {
 		meetingNumber += 1
 	}
 	return csvResult
+}
+
+async function CreateICal(cal, group) {
+	let meetingNumber = 1
+	const lastGroupLessonDate = await getLastLessonDate(group.dates)
+
+	for (const lessonDate of group.dates) {
+		const lessonNumber = `(${meetingNumber}/${group.numberOfLessons})`
+		const subject = await CreateEventName(group, lessonNumber)
+		const description = await CreateEventDescription(group, meetingNumber, lastGroupLessonDate, '\n')
+
+		const [date, timeRange] = lessonDate.split('  ')
+		const [startTime, endTime] = timeRange.split('-')
+		const [year, month, day] = date.split('-').map(Number)
+		const [startHour, startMinute] = startTime.split(':').map(Number)
+		const [endHour, endMinute] = endTime.split(':').map(Number)
+		const startDateWithTime = new Date(year, month - 1, day, startHour, startMinute)
+		const endDateWithTime = new Date(year, month - 1, day, endHour, endMinute)
+
+		cal.createEvent({
+			start: startDateWithTime,
+			end: endDateWithTime,
+			summary: subject,
+			description: description,
+			allDay: false,
+			location: config.location,
+			classification: config.isPrivateEvent ? 'PRIVATE' : 'PUBLIC',
+			transp: 'OPAQUE', // Ustawienie statusu na "busy",
+		})
+		meetingNumber += 1
+	}
+
+	return cal
 }
 
 async function formatDate(date) {
@@ -350,12 +400,14 @@ async function getLastLessonDate(dates) {
 async function main() {
 	await loadConfig()
 	await checkConfig()
+	return
 
-	const browser = await puppeteer.launch({ headless: false })
+	const browser = await puppeteer.launch({ headless: true })
 	const page = await browser.newPage()
 
+	console.log('Łączę się z CRM')
 	await page.goto('https://giganciprogramowaniaformularz.edu.pl/app/Login')
-	await delay(config.timeBeforeLoginInMilliseconds)
+	await delay(1000)
 
 	await login(page, browser)
 	await delay(1000)
@@ -394,25 +446,40 @@ async function main() {
 	console.log()
 	await browser.close()
 	console.log('Przetwarzanie grup..')
+	let fileName
+	let data
 
-	const csvHeader = 'Subject,Start Date,Start Time,End Date,End Time,All Day Event,Description,Location,Private\n'
-	let csvBody = ''
+	if (config.calendarFileFormat.toLowerCase() != 'csv') {
+		fileName = 'Terminarz giganci.ics'
+		const cal = ical()
 
-	for (const group of groups) {
-		const groupCsvResult = await CreateCsv(group)
-		csvBody += groupCsvResult
+		for (const group of groups) {
+			await CreateICal(cal, group)
+		}
+		data = cal.toString()
+	} else {
+		fileName = 'Terminarz giganci.csv'
+		const csvHeader = 'Subject,Start Date,Start Time,End Date,End Time,All Day Event,Description,Location,Private\n'
+		let csvBody = ''
+
+		for (const group of groups) {
+			const groupCsvResult = await CreateCsv(group)
+			csvBody += groupCsvResult
+		}
+		data = csvHeader + csvBody
 	}
+
 	console.log('Przetwarzanie zakończone.')
 	console.log()
 	console.log('Zapisywanie harmonogram do pliku CSV..')
-	const csvFilePath = 'Terminarz giganci.csv'
-	const csvData = csvHeader + csvBody
-	fs.writeFileSync(csvFilePath, csvData, err => {
+
+	fs.writeFileSync(fileName, data, err => {
 		if (err) {
 			throw new Error(`Wystąpił błąd podczas zapisu harmonogramu do pliku: ${err}`)
 		}
 	})
 	console.log('Zapisywanie zakończone.')
+	console.log('Plik gotowy do zaimportowania do wybranego kalendarza. Dzięki!')
 }
 
 ;(async () => {
