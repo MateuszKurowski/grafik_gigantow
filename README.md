@@ -42,7 +42,7 @@ W przypadku napotkania błędu zostanie utworzony plik _blad.txt_ w folderze gł
 
 - [x] Kalendarz Google
 
-Nie spradzałem innych, zachęcam do weryfikacji i zostawienia informacji.
+Nie sprawdzałem innych, zachęcam do weryfikacji i zostawienia informacji.
 
 ## Przykład importu do kalendarza Google
 

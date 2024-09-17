@@ -1,13 +1,15 @@
 {
   "dependencies": {
     "ical-generator": "^6.0.1",
-    "puppeteer": "^22.2.0"
+    "puppeteer": "^22.2.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-block-resources": "^2.4.3",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "name": "grafik_gigantow",
   "description": "Projekt ma na celu automatyzację pobierania harmonogramu zajęć, umożliwiając szybkie i proste zaimportowanie go do wybranego kalendarza. Skrypt pobiera zajęcia z określonego dnia i semestru, zapisując je do pliku CSV, który można łatwo zaimportować do wybranego kalendarza.",
   "version": "1.0.0",
   "main": "start.js",
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

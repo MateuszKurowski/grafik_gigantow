@@ -1,5 +1,10 @@
 const fs = require('fs')
 const puppeteer = require('puppeteer')
+const { clearScreenDown } = require('readline')
+// const blockResourcesPlugin = require('puppeteer-extra-plugin-block-resources')({
+// 	blockedTypes: new Set(['image', 'media', 'font', 'popup']),
+// })
+// puppeteer.use(blockResourcesPlugin);
 const ical = require('ical-generator').default
 let config
 const groups = []
@@ -187,6 +192,13 @@ async function login(page) {
 		}
 	}
 
+	const buttonSelector = 'app-error-dialog button.mat-raised-button'
+	const button = await page.$(buttonSelector)
+	if (button) {
+		await button.click()
+	}
+	await delay(500)
+
 	await Promise.all([page.click('button[data-testid="login-button"]'), page.waitForNavigation()])
 	await page.goto('https://giganciprogramowaniaformularz.edu.pl/app/ListaObecnosci')
 }
@@ -194,7 +206,7 @@ async function login(page) {
 function createObjectFromHeaderText(headerText) {
 	// Jeżeli to czytasz to Ci współczuje, ale to była najszybsza i najprostsza droga
 	const regex =
-		/\[(.*?)\]\s*(\d{2}:\d{2})-(\d{2}:\d{2})\s*(\w+)\s*\|\s*(.*?)\s*Wiek\s*(.*?)\s*lat\s*(.*?)\s*Start zajęć\s*(\d{4}-\d{2}-\d{2})\s*Liczba spotkań:\s*(\d+)\s*Ilość uczniów:\s*(\d+)\s*Numer sali:\s*(\d+)/
+		/\[(\d+)\]\s*(\d{2}:\d{2})-(\d{2}:\d{2})\s*(\w+)\s*\|\s*(.*?)\s*Wiek\s*(.*?)\s*lat\s*(.*?)\s*Start zajęć\s*(\d{4}-\d{2}-\d{2})\s*Liczba spotkań:\s*(\d+)\s*Ilość uczniów:\s*(\d+)\s*(?:Id Kursu:\s*\[(\d+)\]\s*)?Numer sali:\s*(\d+)\s*(?:Nauczyciel:\s*(.*))?/
 
 	const match = headerText.match(regex)
 
@@ -215,7 +227,9 @@ function createObjectFromHeaderText(headerText) {
 		firstLessonDate,
 		numberOfLessons,
 		numberOfStudents,
+		courseId,
 		roomNumber,
+		teacherName,
 	] = match
 
 	const group = {
@@ -233,6 +247,7 @@ function createObjectFromHeaderText(headerText) {
 	}
 
 	if (group.groupAge == '13-15') group.groupAge = '13-18'
+	if (group.groupAge == '16-18') group.groupAge = '13-18'
 
 	return group
 }
@@ -400,14 +415,24 @@ async function getLastLessonDate(dates) {
 async function main() {
 	await loadConfig()
 	await checkConfig()
-	return
 
-	const browser = await puppeteer.launch({ headless: true })
+	const browser = await puppeteer.launch({
+		headless: true,
+	})
 	const page = await browser.newPage()
+	page.setRequestInterception(true)
+
+	page.on('request', request => {
+		if (request.url() == 'https://giganciprogramowaniaformularz.edu.pl/api/Account/IsLoggedIn') {
+			request.abort()
+			return
+		}
+		request.continue()
+	})
 
 	console.log('Łączę się z CRM')
 	await page.goto('https://giganciprogramowaniaformularz.edu.pl/app/Login')
-	await delay(1000)
+	await delay(2000)
 
 	await login(page, browser)
 	await delay(1000)
